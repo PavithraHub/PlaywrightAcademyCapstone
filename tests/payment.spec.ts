@@ -24,7 +24,6 @@ test.describe("Payment and order placement", () => {
     };
     await paymentPage.fillPaymentDetailsAndSubmit(paymentInfo);
     await expect(paymentPage.orderSuccessLabel).toBeVisible();
-
     await paymentPage.page.waitForURL("**/payment_done/**");
     await expect(paymentPage.orderConfirmedHeading).toBeVisible();
     await expect(paymentPage.orderConfirmedMsg).toBeVisible();

@@ -13,6 +13,7 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './tests',
+  testMatch : ['login.spec.ts','signUp.spec.ts','home.spec.ts','payment.spec.ts','contactUs.spec.ts','visualTest.spec.ts'],
   /* Run tests in files in parallel */
   fullyParallel: true,
   workers: 1,
@@ -33,7 +34,8 @@ export default defineConfig({
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on',
     screenshot: 'on',
-    headless: false,
+    headless: true,
+    
   },
 
   /* Configure projects for major browsers */
@@ -46,12 +48,12 @@ export default defineConfig({
     /*{
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
-    },
+    },*/
 
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
-    },*/
+    },
 
     /* Test against mobile viewports. */
     // {

@@ -1,0 +1,932 @@
+<title>Playwright Framework Capstone</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700;800&display=swap">
+<style>
+  /* Layout: full-screen slide deck with navigation */
+  :root {
+    --bg: #fafaf9;
+    --fg: #1c1917;
+    --fg-muted: #78716c;
+    --surface: #ffffff;
+    --surface-alt: #f5f5f4;
+    --accent: #2563eb;
+    --accent-light: #dbeafe;
+    --accent-dark: #1e40af;
+    --green: #16a34a;
+    --green-light: #dcfce7;
+    --orange: #ea580c;
+    --orange-light: #ffedd5;
+    --border: #e7e5e4;
+    --code-bg: #1e293b;
+    --code-fg: #e2e8f0;
+    --code-accent: #7dd3fc;
+    --code-string: #86efac;
+    --code-keyword: #c4b5fd;
+    --font-display: 'Outfit', system-ui, sans-serif;
+    --font-body: 'DM Sans', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --slide-max: 960px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0c0a09;
+      --fg: #e7e5e4;
+      --fg-muted: #a8a29e;
+      --surface: #1c1917;
+      --surface-alt: #292524;
+      --accent: #60a5fa;
+      --accent-light: #1e3a5f;
+      --accent-dark: #93c5fd;
+      --green: #4ade80;
+      --green-light: #14532d;
+      --orange: #fb923c;
+      --orange-light: #431407;
+      --border: #44403c;
+      --code-bg: #0f172a;
+      --code-fg: #e2e8f0;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0c0a09;
+    --fg: #e7e5e4;
+    --fg-muted: #a8a29e;
+    --surface: #1c1917;
+    --surface-alt: #292524;
+    --accent: #60a5fa;
+    --accent-light: #1e3a5f;
+    --accent-dark: #93c5fd;
+    --green: #4ade80;
+    --green-light: #14532d;
+    --orange: #fb923c;
+    --orange-light: #431407;
+    --border: #44403c;
+    --code-bg: #0f172a;
+    --code-fg: #e2e8f0;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { height: 100%; }
+  body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.6;
+    overflow: hidden;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 0;
+  }
+
+  .deck {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Top bar */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 5;
+    background: var(--bg);
+  }
+  .topbar-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .topbar-counter {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--fg-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Progress bar */
+  .progress-track {
+    height: 3px;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.3s ease;
+  }
+
+  /* Slide area */
+  .slide-area {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 24px 0;
+  }
+  .slide {
+    display: none;
+    max-width: var(--slide-max);
+    width: 100%;
+    animation: fadeSlide 0.35s ease;
+  }
+  .slide.active { display: block; }
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Navigation */
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+    gap: 12px;
+    background: var(--bg);
+  }
+  .nav-btn {
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 8px 20px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--fg);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .nav-btn:hover { background: var(--surface-alt); border-color: var(--accent); }
+  .nav-btn:disabled { opacity: 0.3; cursor: default; }
+  .nav-btn:disabled:hover { background: var(--surface); border-color: var(--border); }
+  .nav-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .nav-dots {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    min-width: 0;
+  }
+  .nav-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    padding: 0;
+  }
+  .nav-dot:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .nav-dot.active { background: var(--accent); transform: scale(1.3); }
+  .nav-dot:hover { background: var(--fg-muted); }
+
+  /* Slide typography */
+  .slide h1 {
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 5vw, 2.6rem);
+    font-weight: 800;
+    line-height: 1.15;
+    margin-bottom: 8px;
+    text-wrap: balance;
+  }
+  .slide h2 {
+    font-family: var(--font-display);
+    font-size: clamp(1.4rem, 3.5vw, 1.9rem);
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 6px;
+    text-wrap: balance;
+  }
+  .slide h3 {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    font-size: 1.05rem;
+    color: var(--fg-muted);
+    margin-bottom: 28px;
+    line-height: 1.5;
+  }
+  .slide p { margin-bottom: 12px; }
+
+  /* Tag/badge */
+  .tag {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: var(--accent-light);
+    color: var(--accent);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  /* Cover slide */
+  .cover {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 60vh;
+    gap: 16px;
+  }
+  .cover h1 { font-size: clamp(2.2rem, 6vw, 3.2rem); }
+  .cover-meta {
+    font-size: 0.9rem;
+    color: var(--fg-muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    justify-content: center;
+  }
+  .cover-meta span { white-space: nowrap; }
+  .cover-line {
+    width: 60px;
+    height: 3px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  /* Code block */
+  .code-block {
+    background: var(--code-bg);
+    color: var(--code-fg);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    line-height: 1.65;
+    padding: 16px 18px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 12px 0;
+    white-space: pre;
+  }
+  .code-block .kw { color: var(--code-keyword); }
+  .code-block .str { color: var(--code-string); }
+  .code-block .acc { color: var(--code-accent); }
+  .code-block .cmt { color: #64748b; font-style: italic; }
+
+  /* File tree */
+  .file-tree {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    line-height: 1.8;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    overflow-x: auto;
+    margin: 12px 0;
+  }
+  .file-tree .dir { color: var(--accent); font-weight: 600; }
+  .file-tree .file { color: var(--fg-muted); }
+  .file-tree .desc { color: var(--fg-muted); font-family: var(--font-body); font-size: 0.75rem; }
+
+  /* Card grid */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+    margin: 16px 0;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px;
+  }
+  .card h3 { color: var(--accent); }
+  .card p, .card ul { font-size: 0.88rem; color: var(--fg-muted); }
+  .card ul { padding-left: 18px; }
+  .card ul li { margin-bottom: 4px; }
+
+  /* Table */
+  .slide-table-wrap { overflow-x: auto; margin: 14px 0; }
+  .slide-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+  .slide-table th {
+    text-align: left;
+    font-weight: 600;
+    font-family: var(--font-display);
+    padding: 10px 14px;
+    background: var(--surface-alt);
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+  }
+  .slide-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .slide-table tr:last-child td { border-bottom: none; }
+  .slide-table code {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    background: var(--surface-alt);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  /* Bullet list */
+  .bullet-list {
+    list-style: none;
+    padding: 0;
+    margin: 14px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .bullet-list li {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    font-size: 0.92rem;
+  }
+  .bullet-list .marker {
+    flex-shrink: 0;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-top: 9px;
+  }
+
+  /* Two columns */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin: 16px 0;
+  }
+  @media (max-width: 640px) {
+    .two-col { grid-template-columns: 1fr; }
+  }
+
+  /* Highlight box */
+  .highlight-box {
+    background: var(--accent-light);
+    border-left: 3px solid var(--accent);
+    padding: 14px 18px;
+    border-radius: 0 8px 8px 0;
+    margin: 14px 0;
+    font-size: 0.9rem;
+  }
+
+  /* Stat row */
+  .stat-row {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin: 16px 0;
+  }
+  .stat {
+    flex: 1;
+    min-width: 120px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+  }
+  .stat-val {
+    font-family: var(--font-display);
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-label {
+    font-size: 0.78rem;
+    color: var(--fg-muted);
+    margin-top: 2px;
+  }
+
+  /* Green/orange markers for best practices */
+  .bp-good { background: var(--green-light); border-left: 3px solid var(--green); padding: 12px 16px; border-radius: 0 6px 6px 0; margin: 8px 0; font-size: 0.88rem; }
+  .bp-improve { background: var(--orange-light); border-left: 3px solid var(--orange); padding: 12px 16px; border-radius: 0 6px 6px 0; margin: 8px 0; font-size: 0.88rem; }
+  .bp-label { font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 3px; }
+  .bp-good .bp-label { color: var(--green); }
+  .bp-improve .bp-label { color: var(--orange); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .slide { animation: none; }
+    .progress-fill { transition: none; }
+  }
+</style>
+
+<div class="deck">
+  <div class="topbar">
+    <span class="topbar-title">Playwright Capstone</span>
+    <span class="topbar-counter" id="counter">1 / 11</span>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progress"></div></div>
+
+  <div class="slide-area" id="slideArea">
+
+    <!-- Slide 0: Cover -->
+    <div class="slide active" data-idx="0">
+      <div class="cover">
+        <div class="tag">Capstone Project</div>
+        <h1>Playwright Test Automation Framework</h1>
+        <div class="cover-line"></div>
+        <p class="subtitle" style="max-width:540px">
+          End-to-end UI automation for AutomationExercise.com using Playwright, TypeScript, and the Page Object Model.
+        </p>
+        <div class="cover-meta">
+          <span>Playwright v1.65</span>
+          <span>TypeScript</span>
+          <span>Chromium + WebKit</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 1: Project at a Glance -->
+    <div class="slide" data-idx="1">
+      <div class="tag">Overview</div>
+      <h2>Project at a Glance</h2>
+      <p class="subtitle">A structured automation framework covering login, signup, search, cart, checkout, payment, contact form, accessibility, and visual regression testing.</p>
+
+      <div class="stat-row">
+        <div class="stat"><div class="stat-val">8</div><div class="stat-label">Test Spec Files</div></div>
+        <div class="stat"><div class="stat-val">8</div><div class="stat-label">Page Objects</div></div>
+        <div class="stat"><div class="stat-val">5</div><div class="stat-label">Test Data Files</div></div>
+        <div class="stat"><div class="stat-val">3</div><div class="stat-label">Utility Modules</div></div>
+      </div>
+
+      <div class="highlight-box">
+        <strong>Target application:</strong> <a href="https://www.automationexercise.com/" target="_blank" rel="noopener" style="color:var(--accent)">automationexercise.com</a> &mdash; an e-commerce site with login, product catalog, cart, checkout, contact form, and more.
+      </div>
+
+      <div class="slide-table-wrap">
+        <table class="slide-table">
+          <thead><tr><th>Test Area</th><th>Spec File</th><th>Scenarios</th></tr></thead>
+          <tbody>
+            <tr><td>Login</td><td><code>login.spec.ts</code></td><td>Valid &amp; invalid login</td></tr>
+            <tr><td>Sign Up</td><td><code>signUp.spec.ts</code></td><td>Full account creation flow</td></tr>
+            <tr><td>Product Search</td><td><code>home.spec.ts</code></td><td>Search + add to cart</td></tr>
+            <tr><td>Cart</td><td><code>cart.spec.ts</code></td><td>Verify, remove, clear cart</td></tr>
+            <tr><td>Payment</td><td><code>payment.spec.ts</code></td><td>End-to-end order placement</td></tr>
+            <tr><td>Contact Us</td><td><code>contactUs.spec.ts</code></td><td>Form submission + file upload</td></tr>
+            <tr><td>Accessibility</td><td><code>accessibility.spec.ts</code></td><td>axe-core WCAG scans</td></tr>
+            <tr><td>Visual</td><td><code>visualTest.spec.ts</code></td><td>Screenshot comparison</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Slide 2: Framework Structure -->
+    <div class="slide" data-idx="2">
+      <div class="tag">Architecture</div>
+      <h2>Framework Structure</h2>
+      <p class="subtitle">Organized into distinct layers: configuration, page objects, test data, tests, fixtures, and utilities.</p>
+
+      <div class="file-tree"><span class="dir">AutomationExerciseCapstone/</span>
+  <span class="dir">fixtures/</span>
+    <span class="file">testFixture.ts</span>       <span class="desc">Custom fixture definitions</span>
+  <span class="dir">pages/</span>                   <span class="desc">Page Object Model classes</span>
+    <span class="file">home.ts</span>
+    <span class="file">loginPage.ts</span>
+    <span class="file">signUpPage.ts</span>
+    <span class="file">signUpSuccessfulPage.ts</span>
+    <span class="file">cartPage.ts</span>
+    <span class="file">checkoutPage.ts</span>
+    <span class="file">paymentPage.ts</span>
+    <span class="file">contactUsPage.ts</span>
+  <span class="dir">test-data/</span>               <span class="desc">Typed test data &amp; interfaces</span>
+    <span class="file">loginData.ts</span>
+    <span class="file">signUpData.ts</span>
+    <span class="file">homeData.ts</span>
+    <span class="file">paymentData.ts</span>
+    <span class="file">contactUsData.ts</span>
+    <span class="file">sample-file.txt</span>
+  <span class="dir">tests/</span>                   <span class="desc">Spec files</span>
+    <span class="file">login.spec.ts</span>
+    <span class="file">signUp.spec.ts</span>
+    <span class="file">home.spec.ts</span>
+    <span class="file">cart.spec.ts</span>
+    <span class="file">payment.spec.ts</span>
+    <span class="file">contactUs.spec.ts</span>
+    <span class="file">accessibility.spec.ts</span>
+    <span class="file">visualTest.spec.ts</span>
+  <span class="dir">utils/</span>                   <span class="desc">Shared helpers</span>
+    <span class="file">blockAds.ts</span>
+    <span class="file">randomData.ts</span>
+    <span class="file">eventListener.ts</span>
+  <span class="file">playwright.config.ts</span>    <span class="desc">Playwright configuration</span>
+  <span class="file">package.json</span></div>
+    </div>
+
+    <!-- Slide 3: Page Object Model -->
+    <div class="slide" data-idx="3">
+      <div class="tag">Design Pattern</div>
+      <h2>Page Object Model (POM)</h2>
+      <p class="subtitle">Each page on the site maps to a TypeScript class that encapsulates locators and user actions. Tests call page methods rather than interacting with raw selectors.</p>
+
+      <div class="two-col">
+        <div>
+          <h3>Pattern</h3>
+          <ul class="bullet-list">
+            <li><span class="marker"></span><span>Constructor takes a Playwright <code style="font-family:var(--font-mono);font-size:0.82rem;background:var(--surface-alt);padding:1px 4px;border-radius:3px">Page</code> and declares all locators as <code style="font-family:var(--font-mono);font-size:0.82rem;background:var(--surface-alt);padding:1px 4px;border-radius:3px">readonly</code></span></li>
+            <li><span class="marker"></span><span>Methods expose user-level actions: <em>login</em>, <em>addProductToCart</em>, <em>clearCart</em></span></li>
+            <li><span class="marker"></span><span>No assertions inside page objects &mdash; tests own verification</span></li>
+            <li><span class="marker"></span><span>Locator strategies: <code style="font-family:var(--font-mono);font-size:0.82rem;background:var(--surface-alt);padding:1px 4px;border-radius:3px">getByRole</code>, <code style="font-family:var(--font-mono);font-size:0.82rem;background:var(--surface-alt);padding:1px 4px;border-radius:3px">getByPlaceholder</code>, data-qa attributes, CSS selectors</span></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Page Object Map</h3>
+          <div class="slide-table-wrap">
+            <table class="slide-table">
+              <thead><tr><th>Class</th><th>Page</th></tr></thead>
+              <tbody>
+                <tr><td><code>HomePage</code></td><td>Landing, search, products</td></tr>
+                <tr><td><code>LoginPage</code></td><td>Login &amp; signup entry</td></tr>
+                <tr><td><code>SignUpPage</code></td><td>Registration form</td></tr>
+                <tr><td><code>CartPage</code></td><td>Shopping cart</td></tr>
+                <tr><td><code>CheckOutPage</code></td><td>Checkout summary</td></tr>
+                <tr><td><code>PaymentPage</code></td><td>Payment &amp; confirmation</td></tr>
+                <tr><td><code>ContactUsPage</code></td><td>Contact form</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="code-block"><span class="cmt">// Example: HomePage class pattern</span>
+<span class="kw">export class</span> <span class="acc">HomePage</span> {
+  <span class="kw">readonly</span> page: Page;
+  <span class="kw">readonly</span> searchInput: Locator;
+  <span class="kw">readonly</span> productList: Locator;
+
+  <span class="kw">constructor</span>(page: Page) {
+    <span class="kw">this</span>.page = page;
+    <span class="kw">this</span>.searchInput = page.getByPlaceholder(<span class="str">'Search'</span>);
+    <span class="kw">this</span>.productList = page.locator(<span class="str">'.single-products'</span>);
+  }
+
+  <span class="kw">async</span> searchProduct(term: <span class="acc">string</span>) {
+    <span class="kw">await</span> <span class="kw">this</span>.searchInput.fill(term);
+    <span class="kw">await</span> <span class="kw">this</span>.searchButton.click();
+  }
+}</div>
+    </div>
+
+    <!-- Slide 4: Custom Fixtures -->
+    <div class="slide" data-idx="4">
+      <div class="tag">Playwright Feature</div>
+      <h2>Custom Test Fixtures</h2>
+      <p class="subtitle">Extending Playwright's base <code style="font-family:var(--font-mono);font-size:0.9rem;background:var(--surface-alt);padding:1px 5px;border-radius:3px">test</code> object to inject page objects, ad blocking, accessibility tools, and automatic login state.</p>
+
+      <div class="card-grid">
+        <div class="card">
+          <h3>Page Object Injection</h3>
+          <p>Each page object is created as a fixture, so tests declare dependencies instead of manual setup:</p>
+          <div class="code-block" style="font-size:0.72rem"><span class="acc">homePage</span>: <span class="kw">async</span> ({ page }, use) => {
+  <span class="kw">const</span> hp = <span class="kw">new</span> HomePage(page);
+  <span class="kw">await</span> hp.navigate();
+  <span class="kw">await</span> use(hp);
+}</div>
+        </div>
+        <div class="card">
+          <h3>Auto Ad Blocking</h3>
+          <p>Runs automatically (<code>auto: true</code>) for every test. Intercepts ad network requests at the <code>BrowserContext</code> level:</p>
+          <div class="code-block" style="font-size:0.72rem"><span class="acc">blockAds</span>: [
+  <span class="kw">async</span> ({ context }, use) => {
+    <span class="kw">await</span> blockGoogleAds(context);
+    <span class="kw">await</span> use();
+  },
+  { <span class="acc">auto</span>: <span class="kw">true</span> },
+]</div>
+        </div>
+        <div class="card">
+          <h3>Logged-In User State</h3>
+          <p>Auto fixture that signs in, clears the cart, and navigates home. Tests that need anonymous access override it:</p>
+          <div class="code-block" style="font-size:0.72rem"><span class="cmt">// Override in spec to disable:</span>
+test.use({
+  <span class="acc">loggedInUser</span>: <span class="kw">async</span> ({}, use) => {
+    <span class="kw">await</span> use(); <span class="cmt">// no-op</span>
+  },
+});</div>
+        </div>
+        <div class="card">
+          <h3>Accessibility Builder</h3>
+          <p>Provides a factory function for axe-core scans pre-configured with WCAG 2.x tags:</p>
+          <div class="code-block" style="font-size:0.72rem"><span class="acc">makeAxeBuilder</span>: <span class="kw">async</span> ({ page }, use) => {
+  <span class="kw">const</span> make = () =>
+    <span class="kw">new</span> AxeBuilder({ page })
+      .withTags([<span class="str">"wcag2a"</span>, <span class="str">"wcag2aa"</span>,
+        <span class="str">"wcag21a"</span>, <span class="str">"wcag21aa"</span>]);
+  <span class="kw">await</span> use(make);
+}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 5: Test Data -->
+    <div class="slide" data-idx="5">
+      <div class="tag">Data Management</div>
+      <h2>Test Data Layer</h2>
+      <p class="subtitle">Typed interfaces and exported constants keep test data separate from test logic. Random generators prevent duplicate-account collisions.</p>
+
+      <div class="two-col">
+        <div>
+          <h3>Typed Interfaces</h3>
+          <p style="font-size:0.88rem;color:var(--fg-muted)">Each data file defines a TypeScript interface, giving compile-time safety and autocomplete.</p>
+          <div class="code-block" style="font-size:0.72rem"><span class="kw">export interface</span> <span class="acc">LoginData</span> {
+  email: <span class="acc">string</span>;
+  password: <span class="acc">string</span>;
+  status: <span class="acc">string</span>;
+}
+
+<span class="kw">export const</span> validLoginData: LoginData = {
+  email: <span class="str">'random@boredom.com'</span>,
+  password: <span class="str">'admin'</span>,
+  status: <span class="str">'valid'</span>,
+};</div>
+        </div>
+        <div>
+          <h3>Random Data Generators</h3>
+          <p style="font-size:0.88rem;color:var(--fg-muted)">Used by signup and contact tests to generate unique names and emails per run.</p>
+          <div class="code-block" style="font-size:0.72rem"><span class="kw">export function</span> <span class="acc">generateRandomName</span>(): string {
+  <span class="kw">return</span> <span class="str">`TestUser${Date.now()}`</span>;
+}
+
+<span class="kw">export function</span> <span class="acc">generateRandomEmail</span>(): string {
+  <span class="kw">return</span> <span class="str">`testuser${Date.now()}@example.com`</span>;
+}</div>
+          <div class="highlight-box" style="margin-top:10px">
+            <strong>Why <code style="font-family:var(--font-mono)">Date.now()</code>?</strong> Each test run gets a unique timestamp-based identifier, avoiding signup collisions without needing an external library.
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-table-wrap">
+        <table class="slide-table">
+          <thead><tr><th>File</th><th>Interface</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td><code>loginData.ts</code></td><td><code>LoginData</code></td><td>Valid and invalid credentials</td></tr>
+            <tr><td><code>signUpData.ts</code></td><td><code>AccountDetails</code>, <code>AddressDetails</code></td><td>Registration form data with random name/email</td></tr>
+            <tr><td><code>homeData.ts</code></td><td><code>HomeData</code></td><td>Search terms and product names for cart tests</td></tr>
+            <tr><td><code>paymentData.ts</code></td><td><code>paymentData</code></td><td>Card details for checkout</td></tr>
+            <tr><td><code>contactUsData.ts</code></td><td>&mdash;</td><td>Contact form fields with random email</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Slide 6: Utilities -->
+    <div class="slide" data-idx="6">
+      <div class="tag">Shared Code</div>
+      <h2>Utilities</h2>
+      <p class="subtitle">Three focused utility modules handle cross-cutting concerns: ad blocking, dialog handling, and random data generation.</p>
+
+      <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
+        <div class="card">
+          <h3>blockAds.ts</h3>
+          <p>Route-level interception at the <code>BrowserContext</code> level. Blocks requests to Google ad networks (doubleclick, googlesyndication, googleadservices) so ads don't interfere with test stability.</p>
+          <div class="code-block" style="font-size:0.7rem"><span class="kw">await</span> context.route(
+  <span class="str">/doubleclick|googlesyndication|googleadservices/</span>,
+  route => route.abort()
+);</div>
+        </div>
+        <div class="card">
+          <h3>eventListener.ts</h3>
+          <p>Handles browser dialog events. The <code>page.once('dialog', ...)</code> pattern accepts alert/confirm dialogs that would otherwise block test execution.</p>
+          <div class="code-block" style="font-size:0.7rem">page.once(<span class="str">'dialog'</span>, <span class="kw">async</span> (dialog) => {
+  <span class="kw">await</span> dialog.accept();
+});</div>
+        </div>
+        <div class="card">
+          <h3>randomData.ts</h3>
+          <p>Timestamp-based generators for unique test user names and email addresses. Used by signup and contact test data to prevent collisions across test runs.</p>
+          <div class="code-block" style="font-size:0.7rem"><span class="str">`TestUser${Date.now()}`</span>
+<span class="str">`testuser${Date.now()}@example.com`</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 7: Configuration -->
+    <div class="slide" data-idx="7">
+      <div class="tag">Configuration</div>
+      <h2>Playwright Configuration</h2>
+      <p class="subtitle">Key settings in <code style="font-family:var(--font-mono);font-size:0.9rem;background:var(--surface-alt);padding:1px 5px;border-radius:3px">playwright.config.ts</code> that control test execution behavior.</p>
+
+      <div class="slide-table-wrap">
+        <table class="slide-table">
+          <thead><tr><th>Setting</th><th>Value</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td><code>testDir</code></td><td><code>'./tests'</code></td><td>All specs live under one directory</td></tr>
+            <tr><td><code>testMatch</code></td><td>5 specific files</td><td>Selective test execution &mdash; only login, signup, home, payment, contact run by default</td></tr>
+            <tr><td><code>fullyParallel</code></td><td><code>true</code></td><td>Tests within files run in parallel</td></tr>
+            <tr><td><code>workers</code></td><td><code>1</code></td><td>Single worker for sequential execution (avoids shared state conflicts)</td></tr>
+            <tr><td><code>baseURL</code></td><td><code>automationexercise.com</code></td><td>All navigation is relative to this</td></tr>
+            <tr><td><code>trace</code></td><td><code>'on'</code></td><td>Captures trace for every test (useful for debugging)</td></tr>
+            <tr><td><code>screenshot</code></td><td><code>'on'</code></td><td>Screenshots captured for every test</td></tr>
+            <tr><td><code>headless</code></td><td><code>true</code></td><td>Browser runs without GUI</td></tr>
+            <tr><td><code>reporter</code></td><td><code>'html'</code></td><td>HTML report generated after runs</td></tr>
+            <tr><td><code>projects</code></td><td>Chromium, WebKit</td><td>Cross-browser testing (Firefox commented out)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="highlight-box">
+        <strong>Selective execution:</strong> Only 5 of 8 spec files are in the default <code style="font-family:var(--font-mono)">testMatch</code>. Cart, accessibility, and visual tests are excluded from the default run and must be run explicitly.
+      </div>
+    </div>
+
+    <!-- Slide 8: Best Practices -->
+    <div class="slide" data-idx="8">
+      <div class="tag">Quality</div>
+      <h2>Best Practices Applied</h2>
+      <p class="subtitle">Patterns and techniques in this framework that align with Playwright and test automation best practices.</p>
+
+      <div class="bp-good">
+        <div class="bp-label">Applied: Page Object Model</div>
+        All page interactions are encapsulated in classes. Tests read like user stories rather than selector chains. Locators are declared once and reused.
+      </div>
+      <div class="bp-good">
+        <div class="bp-label">Applied: Custom Fixtures</div>
+        Extended Playwright's fixture system to inject page objects, manage browser state, and set up preconditions. Auto-fixtures handle ad blocking and login without repetitive setup code.
+      </div>
+      <div class="bp-good">
+        <div class="bp-label">Applied: Separated Test Data</div>
+        TypeScript interfaces enforce data shape at compile time. Test data lives in its own directory, independent of test logic. Random generators avoid flaky collisions.
+      </div>
+      <div class="bp-good">
+        <div class="bp-label">Applied: Network Interception</div>
+        Ad blocking via <code style="font-family:var(--font-mono)">context.route()</code> prevents flaky tests caused by third-party ad scripts loading unpredictably.
+      </div>
+      <div class="bp-good">
+        <div class="bp-label">Applied: Multi-Browser Coverage</div>
+        Configured for Chromium and WebKit, with Firefox ready to enable. Uses Playwright's device descriptors for realistic browser settings.
+      </div>
+      <div class="bp-good">
+        <div class="bp-label">Applied: Accessibility Testing</div>
+        Integrated axe-core via <code style="font-family:var(--font-mono)">@axe-core/playwright</code> for automated WCAG compliance checks. Configured with WCAG 2.0 and 2.1 Level A and AA tags.
+      </div>
+      <div class="bp-good">
+        <div class="bp-label">Applied: Visual Regression Testing</div>
+        Screenshot comparison with <code style="font-family:var(--font-mono)">toHaveScreenshot()</code> catches unintended UI changes. Dynamic areas masked to reduce false failures.
+      </div>
+      <div class="bp-good">
+        <div class="bp-label">Applied: Dialog Handling</div>
+        Browser dialogs (alert/confirm) handled via <code style="font-family:var(--font-mono)">page.once('dialog')</code> with assertion on dialog content before accepting.
+      </div>
+    </div>
+
+    <!-- Slide 9: Improvement Areas -->
+    <div class="slide" data-idx="9">
+      <div class="tag">Growth</div>
+      <h2>Areas for Improvement</h2>
+      <p class="subtitle">Opportunities to strengthen the framework further, based on Playwright best practices and real-world automation patterns.</p>
+
+      <div class="bp-improve">
+        <div class="bp-label">Opportunity: Prefer User-Facing Locators</div>
+        Some page objects use CSS selectors (<code style="font-family:var(--font-mono)">.cart_delete</code>, <code style="font-family:var(--font-mono)">#submit_search</code>) where <code style="font-family:var(--font-mono)">getByRole()</code> or <code style="font-family:var(--font-mono)">getByTestId()</code> would be more resilient to DOM changes.
+      </div>
+      <div class="bp-improve">
+        <div class="bp-label">Opportunity: Environment-Based Configuration</div>
+        The base URL and credentials are hardcoded. Using <code style="font-family:var(--font-mono)">.env</code> files with <code style="font-family:var(--font-mono)">dotenv</code> (already scaffolded in the config) would allow easy switching between environments.
+      </div>
+      <div class="bp-improve">
+        <div class="bp-label">Opportunity: CI/CD Integration</div>
+        The GitHub Actions workflow file is referenced in the README but not yet implemented. Adding CI would catch regressions automatically on every push.
+      </div>
+      <div class="bp-improve">
+        <div class="bp-label">Opportunity: Include All Tests in Default Run</div>
+        Cart, accessibility, and visual specs are excluded from <code style="font-family:var(--font-mono)">testMatch</code>. Expanding to <code style="font-family:var(--font-mono)">**/*.spec.ts</code> ensures full coverage by default.
+      </div>
+      <div class="bp-improve">
+        <div class="bp-label">Opportunity: Retry and CI-Specific Config</div>
+        Retries and <code style="font-family:var(--font-mono)">forbidOnly</code> are commented out. Enabling them for CI prevents accidental <code style="font-family:var(--font-mono)">.only</code> commits and handles intermittent failures gracefully.
+      </div>
+      <div class="bp-improve">
+        <div class="bp-label">Opportunity: Authentication State Reuse</div>
+        The <code style="font-family:var(--font-mono)">loggedInUser</code> fixture logs in via the UI for every test. Playwright's <code style="font-family:var(--font-mono)">storageState</code> can save cookies/session and reuse them, cutting test execution time.
+      </div>
+    </div>
+
+    <!-- Slide 10: Learnings -->
+    <div class="slide" data-idx="10">
+      <div class="tag">Takeaways</div>
+      <h2>Key Learnings</h2>
+      <p class="subtitle">Practical insights gained from building this framework from scratch.</p>
+
+      <div class="card-grid">
+        <div class="card">
+          <h3>Fixtures Replace Boilerplate</h3>
+          <p>Custom fixtures eliminate repetitive <code>beforeEach</code> setup. Declaring <code>homePage</code> in the test signature means Playwright handles creation, navigation, and teardown automatically.</p>
+        </div>
+        <div class="card">
+          <h3>Auto-Fixtures for Cross-Cutting Concerns</h3>
+          <p>Setting <code>{ auto: true }</code> on ad blocking runs it for every test without any explicit call. The same pattern works for login state &mdash; and <code>test.use()</code> overrides it cleanly per-file.</p>
+        </div>
+        <div class="card">
+          <h3>Route Interception for Stability</h3>
+          <p>Third-party ads caused random failures and slow loads. Blocking them at the network level via <code>context.route()</code> made the test suite significantly more reliable.</p>
+        </div>
+        <div class="card">
+          <h3>TypeScript Catches Data Mistakes Early</h3>
+          <p>Defining interfaces like <code>LoginData</code> and <code>paymentData</code> means the compiler catches missing or mistyped fields before any test runs.</p>
+        </div>
+        <div class="card">
+          <h3>Dynamic Content Needs Masking</h3>
+          <p>Visual regression tests fail on carousels and rotating content. The <code>mask</code> option in <code>toHaveScreenshot()</code> lets you exclude those areas while still catching layout regressions elsewhere.</p>
+        </div>
+        <div class="card">
+          <h3>Cart Cleanup Requires Careful Synchronization</h3>
+          <p>Deleting cart rows in a loop needs explicit waits for DOM detachment (<code>waitFor({ state: 'detached' })</code>). Without it, stale element references cause flaky failures.</p>
+        </div>
+        <div class="card">
+          <h3>Dialog Handlers Must Register Before the Trigger</h3>
+          <p>The <code>page.once('dialog')</code> listener must be set up before clicking the button that triggers the dialog. Registering it after means the dialog fires before the handler is ready.</p>
+        </div>
+        <div class="card">
+          <h3>Accessibility Testing Is Almost Free</h3>
+          <p>Adding <code>@axe-core/playwright</code> and a fixture factory is minimal effort. Running WCAG scans as part of the suite catches accessibility issues that manual testing would miss.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="nav">
+    <button class="nav-btn" id="prevBtn" disabled>Previous</button>
+    <div class="nav-dots" id="dots"></div>
+    <button class="nav-btn" id="nextBtn">Next</button>
+  </div>
+</div>
+
+<script>
+(function() {
+  var slides = document.querySelectorAll('.slide');
+  var total = slides.length;
+  var current = 0;
+  var counter = document.getElementById('counter');
+  var progress = document.getElementById('progress');
+  var prevBtn = document.getElementById('prevBtn');
+  var nextBtn = document.getElementById('nextBtn');
+  var dotsEl = document.getElementById('dots');
+
+  for (var i = 0; i < total; i++) {
+    var dot = document.createElement('button');
+    dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
+    dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+    dot.dataset.idx = i;
+    dotsEl.appendChild(dot);
+  }
+  var dots = dotsEl.querySelectorAll('.nav-dot');
+
+  function go(idx) {
+    if (idx < 0 || idx >= total) return;
+    slides[current].classList.remove('active');
+    dots[current].classList.remove('active');
+    current = idx;
+    slides[current].classList.add('active');
+    dots[current].classList.add('active');
+    counter.textContent = (current + 1) + ' / ' + total;
+    progress.style.width = ((current + 1) / total * 100) + '%';
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === total - 1;
+    document.getElementById('slideArea').scrollTop = 0;
+  }
+
+  prevBtn.addEventListener('click', function() { go(current - 1); });
+  nextBtn.addEventListener('click', function() { go(current + 1); });
+  dotsEl.addEventListener('click', function(e) {
+    var t = e.target;
+    if (t.classList.contains('nav-dot')) go(Number(t.dataset.idx));
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); go(current + 1); }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); go(current - 1); }
+  });
+
+  go(0);
+})();
+</script>
