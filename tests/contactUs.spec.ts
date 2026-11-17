@@ -4,6 +4,12 @@ import { contactData } from "../test-data/contactUsData";
 
 import { acceptEventListener } from "../utils/eventListener";
 
+test.use({
+  loggedInUser: async ({}, use) => {
+    await use();
+  },
+});
+
 test.describe("Contact Us Tests", () => {
   test("Submit the contact us form", async ({ homePage, contactusPage }) => {
     await homePage.contactUsIcon.click();
@@ -18,8 +24,8 @@ test.describe("Contact Us Tests", () => {
 
     //accept the pop up event
     contactusPage.page.once('dialog', async (dialog) => {
-    expect(dialog.message()).toContain('Press OK to proceed!');
-    await dialog.accept();
+      expect(dialog.message()).toContain('Press OK to proceed!');
+      await dialog.accept();
     });
     await contactusPage.submitBtn.click();
    // acceptEventListener(contactusPage.page);
